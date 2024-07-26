@@ -1,0 +1,8 @@
+Label Id	Label Name	Number Of Voxels	Volume (mm^3)	Image mean (mp2rage_T1Map_r)	Image stdev (mp2rage_T1Map_r)
+0	Clear Label	1563725	1.56373e+006	987.326	404.347
+1	Label 1	2396	2396	1057.56	181.988
+2	Label 2	1168	1168	1073.68	181.514
+3	Label 3	1970	1970	1037.47	154.218
+4	Label 4	1328	1328	1012.68	138.4
+5	Label 5	1317	1317	1011.45	116.91
+6	Label 6	960	960	1061.14	133.746
