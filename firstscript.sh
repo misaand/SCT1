@@ -1,4 +1,4 @@
 #! usr/bin/bash
 
 # ECHO COMMAND
-echo Hello World!
+echo pokus pokus pokus 
