@@ -10,24 +10,32 @@ if [ ! -d "$input_directory" ]; then
     exit 1
 fi
 
-# Check for files beginning with 'sub_'
-csv_files=("$input_directory"/sub_*.csv)
-if [ ! -f "${csv_files[0]}" ]; then
-    echo "No files starting with 'sub_' found in $input_directory."
-    exit 1
-fi
+# Initialize the output file
+> "$output_file"
 
-# Initialize the output file and add the header from the first CSV file
-first_file=true
-for csv_file in "${csv_files[@]}"; do
-    if [ "$first_file" = true ]; then
-        # Copy the header and content from the first file
-        cat "$csv_file" > "$output_file"
-        first_file=false
-    else
-        # Skip the header and append the rest of the content
-        tail -n +2 "$csv_file" >> "$output_file"
+# Process each CSV file
+for csv_file in "$input_directory"/sub_*.csv; do
+    if [ -f "$csv_file" ]; then
+        # Extract the subject label from the filename
+        subject_label=$(basename "$csv_file" .csv)
+        
+        # Read the CSV file
+        # For the first file, include the header with the added "Subject" column
+        # For subsequent files, skip the header
+        if [ ! -s "$output_file" ]; then
+            # Add header with a new column "Subject"
+            awk -v subject="$subject_label" 'NR==1{print "Subject," $0; next} {print subject "," $0}' "$csv_file" > "$output_file"
+        else
+            # Append data without header
+            awk -v subject="$subject_label" 'NR>1 {print subject "," $0}' "$csv_file" >> "$output_file"
+        fi
     fi
 done
 
-echo "Files have been successfully merged into $output_file"
+# Check if the output file was created and has content
+if [ -s "$output_file" ]; then
+    echo "Files have been successfully merged into $output_file"
+else
+    echo "No CSV files were processed or the output file is empty."
+    exit 1
+fi
