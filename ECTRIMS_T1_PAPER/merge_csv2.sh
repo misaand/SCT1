@@ -1,43 +1,31 @@
 #!/bin/bash
 
-# Directory containing the CSV files
-input_directory="Segmentation_Results"
+# Input file and output directory
+input_file="merged_segmentation_results.csv"
 output_directory="Label_Segmentation_Results"
+
+# Labels to filter by
 labels=(0 1 2 3 9 10)
 
-# Check if the input directory exists
-if [ ! -d "$input_directory" ]; then
-    echo "The directory $input_directory does not exist."
+# Ensure output directory exists
+mkdir -p "$output_directory"
+
+# Check if input file exists
+if [ ! -f "$input_file" ]; then
+    echo "Input file $input_file not found!"
     exit 1
 fi
 
-# Create the output directory if it doesn't exist
-mkdir -p "$output_directory"
+# Extract the header
+header=$(head -n 1 "$input_file")
 
-# Initialize the output files with headers
+# Process each label separately
 for label in "${labels[@]}"; do
     output_file="${output_directory}/label_${label}_results.csv"
-    > "$output_file"  # Empty the file if it exists, or create it
+    # Write header to output file
+    echo "$header" > "$output_file"
+    # Append filtered rows for the current label
+    awk -F, -v label="$label" '$1 == label {print $0}' "$input_file" >> "$output_file"
 done
 
-# Process each CSV file
-for csv_file in "$input_directory"/sub_*.csv; do
-    if [ -f "$csv_file" ]; then
-        # Extract the subject label from the filename
-        subject_label=$(basename "$csv_file" .csv)
-
-        # Process each label separately
-        for label in "${labels[@]}"; do
-            output_file="${output_directory}/label_${label}_results.csv"
-
-            # Add header if the file is empty (including "Subject" as the first column)
-            if [ ! -s "$output_file" ]; then
-                awk -v subject="$subject_label" -v label="$label" 'NR==1{print "Subject," $0; next} $2 == label {print subject "," $0}' "$csv_file" > "$output_file"
-            else
-                awk -v subject="$subject_label" -v label="$label" 'NR>1 && $2 == label {print subject "," $0}' "$csv_file" >> "$output_file"
-            fi
-        done
-    fi
-done
-
-echo "Files have been successfully separated by label into the $output_directory directory."
+echo "Data successfully split into separate files by label in $output_directory."
