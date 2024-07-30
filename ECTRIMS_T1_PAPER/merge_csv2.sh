@@ -1,39 +1,35 @@
 #!/bin/bash
 
 # Directory containing the CSV files
-input_directory="Segmentation_Results"  # Replace with the path to your CSV files
-output_directory="merged_results"    # Directory where merged files will be stored
+input_directory="Segmentation_Results"
+output_directory="Merged_Results"
 
-# List of labels to segregate
-labels=("0" "1" "2" "3" "9" "10")
+# Labels to filter by
+labels=(0 1 2 3 9 10)
 
-# Create the output directory if it doesn't exist
+# Ensure output directory exists
 mkdir -p "$output_directory"
 
-# Initialize files with headers
+# Initialize output files with headers
 for label in "${labels[@]}"; do
-    echo "Subject,Label,OtherColumns..." > "$output_directory/merged_label_${label}.csv"
+    output_file="${output_directory}/label_${label}_results.csv"
+    echo "Subject,Label,Volume,Mean_T1" > "$output_file"
 done
 
-# Iterate over each CSV file in the input directory
+# Iterate over all CSV files in the input directory
 for csv_file in "$input_directory"/sub_*.csv; do
     if [ -f "$csv_file" ]; then
-        # Extract the subject ID from the file name (excluding path and extension)
-        subject_id=$(basename "$csv_file" .csv)
+        # Extract subject name from filename
+        subject=$(basename "$csv_file" .csv)
         
-        # Read each line in the CSV file
-        while IFS=, read -r label rest; do
-            # Ignore header row or empty lines
-            if [ "$label" != "Label" ] && [ -n "$label" ]; then
-                # Find the appropriate file and append the data
-                for l in "${labels[@]}"; do
-                    if [ "$label" == "$l" ]; then
-                        echo "$subject_id,$label,$rest" >> "$output_directory/merged_label_${label}.csv"
-                    fi
-                done
-            fi
-        done < "$csv_file"
+        # Process each label separately
+        for label in "${labels[@]}"; do
+            output_file="${output_directory}/label_${label}_results.csv"
+            
+            # Extract rows matching the label and add the subject column
+            awk -v subject="$subject" -F, '$1 == "'$label'" {print subject "," $0}' "$csv_file" >> "$output_file"
+        done
     fi
 done
 
-echo "Merging completed. Check the directory '$output_directory' for results."
+echo "Segmentation results have been successfully merged into separate files for each label."
