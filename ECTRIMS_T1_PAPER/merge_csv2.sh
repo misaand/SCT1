@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Directory containing the CSV files
-input_directory="path_to_csv_files"  # Replace with the path to your CSV files
+input_directory="Segmentation_Results"  # Replace with the path to your CSV files
 output_directory="merged_results"    # Directory where merged files will be stored
 
 # List of labels to segregate
