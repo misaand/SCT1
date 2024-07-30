@@ -2,7 +2,10 @@
 
 # Directory containing the CSV files
 input_directory="Segmentation_Results"
-output_file="merged_segmentation_results.csv"
+output_directory="Label_Segmentation_Results"
+
+# Labels to filter by
+labels=(0 1 2 3 9 10)
 
 # Check if the input directory exists
 if [ ! -d "$input_directory" ]; then
@@ -10,8 +13,15 @@ if [ ! -d "$input_directory" ]; then
     exit 1
 fi
 
-# Initialize the output file
-> "$output_file"
+# Create the output directory if it doesn't exist
+mkdir -p "$output_directory"
+
+# Initialize output files for each label
+for label in "${labels[@]}"; do
+    output_file="${output_directory}/label_${label}_results.csv"
+    # Clear previous content or create the file with the header
+    echo "Subject,Label,Volume,Mean_T1" > "$output_file"
+done
 
 # Process each CSV file
 for csv_file in "$input_directory"/sub_*.csv; do
@@ -19,23 +29,14 @@ for csv_file in "$input_directory"/sub_*.csv; do
         # Extract the subject label from the filename
         subject_label=$(basename "$csv_file" .csv)
         
-        # Read the CSV file
-        # For the first file, include the header with the added "Subject" column
-        # For subsequent files, skip the header
-        if [ ! -s "$output_file" ]; then
-            # Add header with a new column "Subject"
-            awk -v subject="$subject_label" 'NR==1{print "Subject," $0; next} {print subject "," $0}' "$csv_file" > "$output_file"
-        else
-            # Append data without header
-            awk -v subject="$subject_label" 'NR>1 {print subject "," $0}' "$csv_file" >> "$output_file"
-        fi
+        # Process each label
+        for label in "${labels[@]}"; do
+            output_file="${output_directory}/label_${label}_results.csv"
+            
+            # Filter rows by label and add the subject column
+            awk -F, -v subject="$subject_label" -v label="$label" 'NR>1 && $2 == label {print subject "," $0}' "$csv_file" >> "$output_file"
+        done
     fi
 done
 
-# Check if the output file was created and has content
-if [ -s "$output_file" ]; then
-    echo "Files have been successfully merged into $output_file"
-else
-    echo "No CSV files were processed or the output file is empty."
-    exit 1
-fi
+echo "Files have been successfully split and saved in the $output_directory directory."
