@@ -1,37 +1,38 @@
 #!/bin/bash
 
-# Input file and output directory
-input_file="merged_segmentation_results.csv"
-output_directory="Label_Segmentation_Results"
-
-# Labels to filter by
-labels=(0 1 2 3 9 10)
+# Directory containing the CSV files
+input_directory="Segmentation_Results"
+output_file="merged_segmentation_results.csv"
 
 # Ensure output directory exists
-mkdir -p "$output_directory"
-
-# Check if input file exists
-if [ ! -f "$input_file" ]; then
-    echo "Input file $input_file not found!"
+if [ ! -d "$input_directory" ]; then
+    echo "The directory $input_directory does not exist."
     exit 1
 fi
 
-# Extract the header
-header=$(head -n 1 "$input_file")
-
-# Define the column number for LabelID (change this if necessary)
-label_column=1  # Assuming LabelID is in the first column
-
-# Set the field separator (adjust if your CSV uses a different separator, e.g., ';')
-field_separator=','
-
-# Process each label separately
-for label in "${labels[@]}"; do
-    output_file="${output_directory}/label_${label}_results.csv"
-    # Write header to output file
-    echo "$header" > "$output_file"
-    # Append filtered rows for the current label
-    awk -F"$field_separator" -v label="$label" -v label_column="$label_column" '$label_column == label {print $0}' "$input_file" >> "$output_file"
+# Initialize the output file and add the header from the first CSV file
+first_file=true
+for csv_file in "$input_directory"/sub_*.csv; do
+    if [ -f "$csv_file" ]; then
+        # Extract subject name from filename
+        subject=$(basename "$csv_file" .csv)
+        
+        if $first_file; then
+            # Add the SubjectID to the header and write to the output file
+            echo "SubjectID,$(head -n 1 "$csv_file")" > "$output_file"
+            first_file=false
+        fi
+        
+        # Process the file: Add SubjectID column, replace LabelID 10 with 8
+        awk -F, -v subject="$subject" 'BEGIN {OFS=","} 
+            NR > 1 {if ($1 == 10) $1 = 8; print subject, $0}' "$csv_file" >> "$output_file"
+    fi
 done
 
-echo "Data successfully split into separate files by label in $output_directory."
+# Check if the output file was created and contains data
+if [ -s "$output_file" ]; then
+    echo "Files have been successfully merged into $output_file"
+else
+    echo "No data was merged. Check the input files and directory."
+    exit 1
+fi
