@@ -1,4 +1,4 @@
-Subject,LabelID        Mean        StdD         Max         Min       Count     Vol(mm^3)        Extent(Vox)
+SubjectID,LabelID        Mean        StdD         Max         Min       Count     Vol(mm^3)        Extent(Vox)
 sub_105991_20180625_Hanzlikova_segmentation_results_comma,    0    1026,89777   422,75470  4728,59131     0,00000     1615488   1615488,000    128   128    99
 sub_105991_20180625_Hanzlikova_segmentation_results_comma,    1    1056,78175   192,04058  2335,95923   706,71735        6466      6466,000     17    15    70
 sub_105991_20180625_Hanzlikova_segmentation_results_comma,    9    1182,15007    90,45434  1251,04504  1079,71655           3         3,000      1     2     2
